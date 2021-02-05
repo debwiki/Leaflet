@@ -1,36 +1,109 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong/latlong.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:leaflet/leafletmap.dart';
+import 'package:provider/provider.dart';
+import 'package:ss_bottom_navbar/ss_bottom_navbar.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-        // This makes the visual density adapt to the platform that you run
-        // the app on. For desktop platforms, the controls will be smaller and
-        // closer together (more dense) than on mobile platforms.
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: MapPage(),
+      title: "SS Bottom NavBar Example App",
+      home: App(),
     );
   }
+}
+
+class App extends StatefulWidget {
+  @override
+  _AppState createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  SSBottomBarState _state;
+  bool _isVisible = true;
+
+  final _colors = [
+    Colors.red,
+    Colors.blue,
+    Colors.green,
+    Colors.orange,
+    Colors.teal
+  ];
+  final items = [
+    SSBottomNavItem(text: 'Home', iconData: Icons.home),
+    SSBottomNavItem(text: 'Store', iconData: Icons.store),
+    SSBottomNavItem(text: 'Add', iconData: Icons.add, isIconOnly: true),
+    SSBottomNavItem(text: 'Explore', iconData: Icons.explore),
+    SSBottomNavItem(text: 'Profile', iconData: Icons.person),
+  ];
+
+  @override
+  void initState() {
+    _state = SSBottomBarState();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => _state,
+      builder: (context, child) {
+        context.watch<SSBottomBarState>();
+        return Scaffold(
+          body: IndexedStack(
+            index: _state.selected,
+            children: _buildPages(),
+          ),
+          floatingActionButton: FloatingActionButton(
+            child: Icon(_isVisible
+                ? Icons.keyboard_arrow_down
+                : Icons.keyboard_arrow_up),
+            onPressed: () {
+              _state.setSelected(3);
+            },
+          ),
+          bottomNavigationBar: SSBottomNav(
+            items: items,
+            state: _state,
+            color: Colors.black,
+            selectedColor: Colors.white,
+            unselectedColor: Colors.black,
+            visible: _isVisible,
+            bottomSheetWidget: _bottomSheet(),
+            showBottomSheetAt: 2,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _page(Color color) => Container(color: color);
+
+  List<Widget> _buildPages() => _colors.map((color) => _page(color)).toList();
+
+  Widget _bottomSheet() => Container(
+        color: Colors.white,
+        child: Column(
+          children: [
+            ListTile(
+              leading: Icon(Icons.camera_alt),
+              title: Text('Use Camera'),
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library),
+              title: Text('Choose from Gallery'),
+            ),
+            ListTile(
+              leading: Icon(Icons.edit),
+              title: Text('Write a Story'),
+              onTap: () {
+                Navigator.maybePop(context);
+              },
+            ),
+          ],
+        ),
+      );
 }
